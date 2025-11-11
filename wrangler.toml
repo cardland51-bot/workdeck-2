@@ -2,13 +2,14 @@ name = "workdeck"
 main = "functions/api/jobs/upload.js"
 compatibility_date = "2024-11-01"
 
-[site]
-bucket = "./dist"
+# 👇 new required key for Pages
+pages_build_output_dir = "./dist"
 
 [vars]
 PUBLIC_BUCKET_URL = "https://pub-8256a83562a441a19db6ee3ab4feacf8.r2.dev"
 
 [[r2_buckets]]
 binding = "R2"
-bucket_name = "sortdeck"
+bucket_name = "sorkdecj"   # match your actual bucket name exactly
+
 
