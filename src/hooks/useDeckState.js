@@ -36,13 +36,18 @@ const useDeckState = create((set,get)=> ({
       await saveCard(card)
       set(s=> ({ cards: [card, ...s.cards] }))
       return card
-    } catch(e){
-      // queue for later
-      const id = 'pending_' + Date.now()
-      await queuePendingUpload({ id, fileName: file.name, type: file.type, data: await file.arrayBuffer() })
-      toast('Saved offline. Will upload when online.')
-      return null
-    }
+   } catch(e){
+  const message = e?.message || 'Upload failed'
+  // Queue offline only if the browser is actually offline
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    const id='pending_'+Date.now()
+    await queuePendingUpload({ id, fileName:file.name, type:file.type, data:await file.arrayBuffer(), label })
+    toast('Saved offline. Will upload when online.')
+  } else {
+    toast(message)
+  }
+  return null
+}
   },
   async flushPending(){
     const items = await getAllPending()
