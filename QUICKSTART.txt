@@ -1,0 +1,5 @@
+
+
+ONE-CLICK START (serves the site on http://localhost:10000)
+- In the 'workdeck' folder, double-click: START EVERYTHING (Windows).bat
+  (It builds the site and starts the demo API, then opens your browser)

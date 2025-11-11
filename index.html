@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkDeck — Field Estimate App</title>
+  <script>
+    // theme boot
+    const t = localStorage.getItem('workdeck_theme') || 'light';
+    if (t === 'dark') document.documentElement.classList.add('dark');
+  </script>
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&vault=true&intent=subscription"></script>
+</head>
+<body class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+DEPLOY TO RENDER — ONE SERVICE (EASY)
+
+This deploys the API and website together and keeps uploads on a persistent disk.
+
+1) Put this 'workdeck' folder in a GitHub repo (files at the repo root).
+2) Go to https://render.com -> New -> Blueprint -> Connect your repo.
+3) Accept defaults (it will read render.yaml). Click "Apply".
+4) Wait for deploy to finish, then open the Render URL. You're live.
+
+Notes:
+- Uploads are saved on a Render disk at /opt/render/project/src/demo-server/uploads
+- If you need OpenAI in your backend, add OPENAI_API_KEY in Render -> your service -> Environment.
+- The website is served from the same service, so no CORS config needed.
