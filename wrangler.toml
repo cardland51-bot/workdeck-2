@@ -11,4 +11,4 @@ PUBLIC_BUCKET_URL = "https://pub-8256a83562a441a19db6ee3ab4feacf8.r2.dev"
 
 [[r2_buckets]]
 binding = "R2"
-bucket_name = "workdeck-uploads"
+bucket_name = "sorkdecj"
