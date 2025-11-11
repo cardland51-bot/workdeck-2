@@ -2,12 +2,11 @@ name = "workdeck"
 main = "functions/api/jobs/upload.js"
 compatibility_date = "2024-11-01"
 
-# Required by Pages v3 builds:
+# Required by the Pages builder when using wrangler config
 pages_build_output_dir = "dist"
 
 [[r2_buckets]]
 binding = "R2"
-bucket_name = "sorkdecj"   # <-- use your exact bucket name
-   # match your actual bucket name exactly
+bucket_name = "sorkdecj"   # <- match your bucket name EXACTLY as in the Pages UI
 
 
