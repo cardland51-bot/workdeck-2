@@ -5,3 +5,4 @@ export const onRequestGet = async ({ env }) => {
     headers: { 'content-type': 'application/json' }
   })
 }
+
