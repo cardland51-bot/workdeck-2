@@ -2,7 +2,7 @@ export const onRequestGet = async ({ params, env }) => {
   const { format, cardId } = params;
 
   // Load the card JSON we saved during upload
-  const obj = await env.R2.get(`cards/${cardId}.json`);
+  const obj = await env.R2.get(`cards/${cardid}.json`);
   if (!obj) return new Response('Not found', { status: 404 });
   const c = JSON.parse(await obj.text());
 
