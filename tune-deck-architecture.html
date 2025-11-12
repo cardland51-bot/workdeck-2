@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WorkDeck — Tune Deck Architecture</title>
+<style>
+  :root{
+    --ink:#0b1320; --muted:#6b7280; --edge:#0fb5a5; --bg:#f8fafc; --card:#ffffff; --line:#0fb5a5;
+  }
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  header{padding:16px 20px;background:var(--edge);color:#fff;font-weight:700;letter-spacing:.2px}
+  main{max-width:1100px;margin:24px auto;padding:0 16px 40px}
+  .wrap{display:grid;gap:16px}
+  .card{background:var(--card);border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 2px 14px rgba(3,7,18,.05);padding:16px}
+  h2{margin:0 0 6px 0;font-size:18px}
+  p{margin:4px 0;color:var(--muted)}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .pill{border:1px solid #e5e7eb;padding:6px 10px;border-radius:999px;background:#fff}
+  .svg-wrap{overflow:auto}
+  svg{min-width:980px;width:100%;height:auto}
+  .box{fill:#fff;stroke:#0b1320;stroke-width:1.5}
+  .edge{fill:#e6fbf7;stroke:var(--line);stroke-width:1.5}
+  .title{font-weight:700;fill:#0b1320;font-size:13px}
+  .note{fill:#475569;font-size:12px}
+  .arrow{stroke:var(--line);stroke-width:2;marker-end:url(#arrow)}
+  .dashed{stroke-dasharray:5 5}
+  .badge{font-size:11px;fill:#fff}
+  .badge-rect{fill:#0fb5a5;rx:6}
+  .callouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:8px}
+  .callouts .card h3{margin:0 0 6px 0;font-size:15px}
+  code{background:#f1f5f9;padding:2px 6px;border-radius:6px}
+  @media (max-width:900px){.callouts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>WorkDeck · Tune Deck Architecture (Photo → Estimate → Feedback → Train)</header>
+<main>
+  <div class="wrap">
+    <section class="card">
+      <h2>Overview</h2>
+      <p>This diagram shows the live flow: user captures a photo → WorkDeck UI calls Cloudflare Functions → objects land in R2 → AI analyzes → a deck card appears with a price band and confidence → you (or trusted testers) use <em>Tune Deck</em> to correct the band → those corrections log as training data → periodic fine-tuning updates the model used by <code>/analyze</code>.</p>
+      <div class="legend">
+        <span class="pill">Edge/API: Cloudflare Functions (<code>/api/jobs</code>, <code>/api/job/list</code>, <code>/api/train</code>, <code>/api/health</code>)</span>
+        <span class="pill">Storage: Cloudflare R2 (photos, logs, training samples)</span>
+        <span class="pill">Model: OpenAI (Project-scoped keys, updated model ID)</span>
+        <span class="pill">Client: WorkDeck UI (Deck + Tune Deck)</span>
+      </div>
+    </section>
+
+    <section class="card svg-wrap" aria-label="Tune Deck Architecture Diagram">
+      <svg viewBox="0 0 1100 600" role="img">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="var(--line)"></path>
+          </marker>
+        </defs>
+
+        <!-- Client cluster -->
+        <rect x="40" y="40" width="280" height="250" class="box"/>
+        <text x="50" y="60" class="title">Client · WorkDeck UI</text>
+        <text x="50" y="80" class="note">• Capture/Upload (1–2 photos)</text>
+        <text x="50" y="98" class="note">• Intent: Repair / Upgrade / Maintenance</text>
+        <text x="50" y="116" class="note">• Deck: price band, confidence, thumbnails</text>
+        <text x="50" y="134" class="note">• Tune Deck: Correct / Adjust band</text>
+
+        <!-- Buttons inside client box (visual only) -->
+        <rect x="60" y="160" width="110" height="28" rx="6" class="edge"/>
+        <text x="70" y="179" class="title">Take Photo</text>
+        <rect x="180" y="160" width="120" height="28" rx="6" class="edge"/>
+        <text x="190" y="179" class="title">Add Context</text>
+        <rect x="60" y="198" width="240" height="28" rx="6" class="edge"/>
+        <text x="70" y="217" class="title">Generate Estimate</text>
+
+        <!-- API cluster -->
+        <rect x="410" y="40" width="310" height="250" class="box"/>
+        <text x="420" y="60" class="title">Edge · Cloudflare Functions</text>
+        <text x="420" y="80" class="note">/api/jobs (POST) → accept image(s), intent</text>
+        <text x="420" y="98" class="note">/api/job/list (GET) → cards JSON</text>
+        <text x="420" y="116" class="note">/api/train (POST) → corrections → logs</text>
+        <text x="420" y="134" class="note">/api/health (GET) → status</text>
+
+        <!-- Storage cluster -->
+        <rect x="780" y="40" width="280" height="250" class="box"/>
+        <text x="790" y="60" class="title">Storage · Cloudflare R2</text>
+        <text x="790" y="80" class="note">• /photos/{jobId}/detail.jpg</text>
+        <text x="790" y="98" class="note">• /photos/{jobId}/context.jpg</text>
+        <text x="790" y="116" class="note">• /cards/{jobId}.json</text>
+        <text x="790" y="134" class="note">• /train/logs/{date}.ndjson</text>
+
+        <!-- Model cluster -->
+        <rect x="410" y="330" width="310" height="230" class="box"/>
+        <text x="420" y="350" class="title">Model · OpenAI (Project Keys)</text>
+        <text x="420" y="370" class="note">/analyze → vision + price prompt</text>
+        <text x="420" y="388" class="note">/fine-tune → periodic updates</text>
+        <text x="420" y="406" class="note">Model ID saved to config/env</text>
+
+        <!-- Orchestration notes -->
+        <rect x="780" y="330" width="280" height="230" class="box"/>
+        <text x="790" y="350" class="title">Orchestration · Cron / Manual</text>
+        <text x="790" y="370" class="note">• Batch N tuned samples → /fine-tune</text>
+        <text x="790" y="388" class="note">• Update ANALYZE_MODEL_ID</text>
+        <text x="790" y="406" class="note">• Write audit to R2 /train/logs</text>
+
+        <!-- Arrows -->
+        <!-- UI → /api/jobs -->
+        <line x1="320" y1="205" x2="410" y2="205" class="arrow"/>
+        <text x="335" y="196" class="note">POST /api/jobs</text>
+
+        <!-- /api/jobs → R2 (store photos) -->
+        <line x1="720" y1="120" x2="780" y2="120" class="arrow"/>
+        <text x="655" y="112" class="note">write photos</text>
+
+        <!-- /api/jobs ↔ OpenAI analyze -->
+        <line x1="565" y1="290" x2="565" y2="330" class="arrow"/>
+        <text x="575" y="315" class="note">analyze</text>
+
+        <!-- /api/jobs → R2 (card JSON) -->
+        <line x1="720" y1="160" x2="780" y2="160" class="arrow"/>
+        <text x="655" y="152" class="note">write card</text>
+
+        <!-- /api/job/list → UI -->
+        <line x1="410" y1="220" x2="320" y2="220" class="arrow"/>
+        <text x="325" y="235" class="note">GET /api/job/list</text>
+
+        <!-- UI Tune → /api/train -->
+        <line x1="320" y1="245" x2="410" y2="245" class="arrow"/>
+        <text x="335" y="262" class="note">POST /api/train</text>
+
+        <!-- /api/train → R2 logs -->
+        <line x1="720" y1="200" x2="780" y2="200" class="arrow"/>
+        <text x="655" y="192" class="note">append log</text>
+
+        <!-- Orchestrator → OpenAI fine-tune -->
+        <line x1="920" y1="430" x2="720" y2="430" class="arrow"/>
+        <text x="770" y="420" class="note">batch → fine-tune</text>
+        <line x1="565" y1="430" x2="565" y2="290" class="arrow dashed"/>
+        <text x="575" y="405" class="note">new model id</text>
+
+        <!-- Badges -->
+        <rect x="248" y="48" width="64" height="20" class="badge-rect"/>
+        <text x="255" y="62" class="badge">CLIENT</text>
+        <rect x="632" y="48" width="80" height="20" class="badge-rect"/>
+        <text x="640" y="62" class="badge">EDGE/API</text>
+        <rect x="978" y="48" width="60" height="20" class="badge-rect"/>
+        <text x="985" y="62" class="badge">STORAGE</text>
+        <rect x="632" y="338" width="80" height="20" class="badge-rect"/>
+        <text x="640" y="352" class="badge">MODEL</text>
+        <rect x="964" y="338" width="74" height="20" class="badge-rect"/>
+        <text x="972" y="352" class="badge">CONTROL</text>
+      </svg>
+    </section>
+
+    <section class="card">
+      <h2>Key Behaviors</h2>
+      <div class="callouts">
+        <div class="card">
+          <h3>1) Analyze Flow</h3>
+          <p><code>POST /api/jobs</code> accepts 1–2 photos + <em>intent</em>. Stores originals in R2, calls OpenAI vision/prompt, computes band + confidence, writes <code>/cards/{jobId}.json</code>, returns card to UI.</p>
+        </div>
+        <div class="card">
+          <h3>2) Tune Deck</h3>
+          <p>When you hit <em>Correct</em> or adjust the band, the UI sends <code>POST /api/train</code> with jobId, photos, AI guess, your corrected band, and (optionally) a confidence slider. Appends to R2 training logs.</p>
+        </div>
+        <div class="card">
+          <h3>3) Fine-Tune Loop</h3>
+          <p>Cron or manual job batches recent corrections, calls OpenAI fine-tune, and updates <code>ANALYZE_MODEL_ID</code> used by <code>/analyze</code>. New responses get tighter over time.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Secrets & Environments (Project Keys)</h2>
+      <p>Use project-scoped keys and per-env variables:</p>
+      <ul>
+        <li><code>OPENAI_API_KEY</code>, <code>OPENAI_PROJECT_ID</code></li>
+        <li><code>ANALYZE_MODEL_ID</code> (updates after fine-tune)</li>
+        <li><code>PUBLIC_BUCKET_URL</code> (R2 public reads)</li>
+      </ul>
+      <p class="note">This mirrors OpenAI’s direction: governance per project, isolated budgets, easy rotation.</p>
+    </section>
+
+    <section class="card">
+      <h2>MVP → Next Steps</h2>
+      <ol>
+        <li>Add preview thumbnails to Deck cards (read from R2 photo paths).</li>
+        <li>Introduce <em>Intent</em> selector (Repair / Upgrade / Maintenance) to guide 1–2 photo capture.</li>
+        <li>Enable <em>Tune Deck</em>: store corrections via <code>/api/train</code> → R2 logs.</li>
+        <li>Wire a simple orchestrator (button or cron) to batch logs → fine-tune → update <code>ANALYZE_MODEL_ID</code>.</li>
+        <li>Show Confidence bar on cards; log your confidence when correcting.</li>
+      </ol>
+    </section>
+  </div>
+</main>
+</body>
+</html>
