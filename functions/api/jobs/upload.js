@@ -21,7 +21,7 @@ export const onRequestPost = async ({ request, env }) => {
       httpMetadata: { contentType: file.type || 'application/octet-stream' }
     });
 
-    const mediaUrl = `${env.PUBLIC_BUCKET_URL}/${keyMedia}`;
+    const mediaUrl = `${https://pub-8256a83562a441a19db6ee3ab4feacf8.r2.dev}/${keyMedia}`;
 
     // 2) call OpenAI (guardrails + price band)
     const ai = await analyzeWithOpenAI({ imageUrl: mediaUrl, category: label, apiKey: env.OPENAI_API_KEY });
