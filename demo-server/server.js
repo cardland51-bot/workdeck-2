@@ -9,7 +9,14 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // CORS for Vite preview/dev
-const ORIGINS = ['http://localhost:5173','http://127.0.0.1:5173','http://localhost:4173','http://127.0.0.1:4173'];
+const ORIGINS = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173',
+  'https://workdeck-2.pages.dev'  // your live Cloudflare site
+];
+
 app.use(cors({
   origin: function(origin, cb){
     if (!origin) return cb(null, true);
