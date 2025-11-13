@@ -16,7 +16,7 @@ export async function uploadMedia(file, fields={}){
 }
 
 export async function exportCard(cardId, format='pdf'){
-  const res = await fetch(`/api/export/${format}/${cardId}`, { credentials: 'include' })
+  const res = await fetch(`/api/export/${format}/${cardid}`, { credentials: 'include' })
   if (!res.ok) throw new Error('export_failed')
   return await res.blob()
 }
